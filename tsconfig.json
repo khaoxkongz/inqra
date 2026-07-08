@@ -1,0 +1,6 @@
+{
+  "extends": "@inqra/config/tsconfig.base.json",
+  "compilerOptions": {
+    "strictNullChecks": true
+  }
+}

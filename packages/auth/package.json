@@ -1,0 +1,24 @@
+{
+  "name": "@inqra/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@inqra/db": "workspace:*",
+    "@inqra/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@inqra/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

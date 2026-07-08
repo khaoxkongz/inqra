@@ -1,0 +1,48 @@
+{
+  "name": "inqra",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "dev:web": "turbo run dev -F web",
+    "dev:server": "turbo run dev -F server",
+    "db:push": "turbo run db:push -F @inqra/db",
+    "db:studio": "turbo run db:studio -F @inqra/db",
+    "db:generate": "turbo run db:generate -F @inqra/db",
+    "db:migrate": "turbo run db:migrate -F @inqra/db",
+    "db:start": "docker compose up -d postgres",
+    "db:watch": "docker compose up postgres",
+    "db:stop": "docker compose stop postgres",
+    "db:down": "docker compose down postgres",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "dependencies": {
+    "@inqra/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@inqra/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint-plugin-github": "6.0.0",
+    "eslint-plugin-sonarjs": "^4.1.0",
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "oxlint-plugin-react-doctor": "^0.7.1",
+    "turbo": "^2.10.2",
+    "typescript": "catalog:",
+    "ultracite": "7.9.2"
+  },
+  "packageManager": "pnpm@11.10.0"
+}
