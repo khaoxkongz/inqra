@@ -1,22 +1,28 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { google } from "@ai-sdk/google";
+
+import { serve } from "@hono/node-server";
 import { trpcServer } from "@hono/trpc-server";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+  wrapLanguageModel,
+} from "ai";
+import { initLogger } from "evlog";
+import type { BetterAuthInstance } from "evlog/better-auth";
+import { createAuthMiddleware } from "evlog/better-auth";
+import type { EvlogVariables } from "evlog/hono";
+import { evlog } from "evlog/hono";
+
 import { createContext } from "@inqra/api/context";
 import { appRouter } from "@inqra/api/routers/index";
 import { auth } from "@inqra/auth";
 import { env } from "@inqra/env/server";
-import {
-  createUIMessageStreamResponse,
-  streamText,
-  toUIMessageStream,
-  convertToModelMessages,
-  wrapLanguageModel,
-} from "ai";
-import { initLogger } from "evlog";
-import { createAuthMiddleware, type BetterAuthInstance } from "evlog/better-auth";
-import { evlog, type EvlogVariables } from "evlog/hono";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
 
 initLogger({
   env: { service: "inqra-server" },
@@ -32,7 +38,7 @@ const app = new Hono<EvlogVariables>();
 app.use(evlog());
 app.use("*", async (c, next) => {
   await identifyUser(c.get("log"), c.req.raw.headers, c.req.path);
-  await next();
+  return await next();
 });
 
 app.use(
@@ -42,7 +48,7 @@ app.use(
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  }),
+  })
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
@@ -51,10 +57,8 @@ app.use(
   "/trpc/*",
   trpcServer({
     router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
-    },
-  }),
+    createContext: (_opts, context) => createContext({ context }),
+  })
 );
 
 app.post("/ai", async (c) => {
@@ -74,11 +78,7 @@ app.post("/ai", async (c) => {
   });
 });
 
-app.get("/", (c) => {
-  return c.text("OK");
-});
-
-import { serve } from "@hono/node-server";
+app.get("/", (c) => c.text("OK"));
 
 serve(
   {
@@ -87,5 +87,5 @@ serve(
   },
   (info) => {
     console.log(`Server is running on http://localhost:${info.port}`);
-  },
+  }
 );
