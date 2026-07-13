@@ -10,7 +10,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function RouteComponent() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
 
   return (
     <SidebarProvider

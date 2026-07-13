@@ -174,7 +174,6 @@ export const Route = createFileRoute("/app/")({
     ],
   },
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ search }),
   component: RouteComponent,
 });
 
@@ -191,7 +190,7 @@ function ProjectTeamBadge({ teamName }: Pick<Project, "teamName">) {
 function ProjectTitle({ name }: Pick<Project, "name">) {
   return (
     <Tooltip>
-      <TooltipTrigger className="inline-flex w-full items-center text-start">
+      <TooltipTrigger className="inline-flex h-10 w-full items-center text-start">
         {truncateText(name, PROJECT_NAME_MAX_LENGTH)}
       </TooltipTrigger>
       <TooltipContent>{name}</TooltipContent>
@@ -297,11 +296,11 @@ function ProjectGridCard({ project }: { project: Project }) {
         </div>
       </div>
 
-      <Link
+      {/* <Link
         to="/app/project/$id"
         params={{ id: project.id }}
         className="absolute inset-0 cursor-pointer"
-      />
+      /> */}
     </article>
   );
 }
@@ -368,7 +367,7 @@ function ProjectListCard({ project }: { project: Project }) {
 }
 
 function RouteComponent() {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
 
   const navigate = useNavigate({ from: "/app/" });
   const { view, isFavorite } = Route.useSearch();
@@ -394,6 +393,7 @@ function RouteComponent() {
       </header>
 
       <Tabs
+        value={view}
         orientation="horizontal"
         defaultValue={view}
         className="flex flex-1 flex-col gap-4 p-4"
@@ -560,7 +560,7 @@ function RouteComponent() {
 
             <TabsContent
               value="grid"
-              className="grid auto-rows-max grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              className="grid auto-rows-max grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
             >
               {visibleProjects.map((project) => (
                 <ProjectGridCard key={project.id} project={project} />
@@ -588,7 +588,6 @@ function RouteComponent() {
               <Button
                 type="button"
                 variant="secondary"
-                nativeButton={false}
                 className="size-12 rounded-full bg-linear-to-b from-[#DEFFE0] to-[#EAFFEB] shadow-[inset_0px_-4px_5.7px_0px_#0D8A7240] ring-8 ring-[#F2FEFBBD] backdrop-blur-3xl"
               >
                 <HugeiconsIcon
@@ -606,7 +605,6 @@ function RouteComponent() {
               type="button"
               variant="ghost"
               data-slot="card-action"
-              nativeButton={false}
               onClick={() => setOpen(false)}
               className="col-start-2 row-span-2 row-start-1 size-12 self-center-safe justify-self-end rounded-full"
             >
@@ -617,7 +615,7 @@ function RouteComponent() {
           <FieldSet>
             <FieldLegend>โปรเจกต์</FieldLegend>
             <FieldSeparator />
-            <ScrollArea className="h-75 min-h-min">
+            <ScrollArea className="h-75">
               <FieldGroup className="gap-4">
                 <Field
                   orientation="responsive"
@@ -717,7 +715,7 @@ function RouteComponent() {
           <FieldSet>
             <FieldLegend>Task</FieldLegend>
             <FieldSeparator />
-            <ScrollArea className="h-75 min-h-min">
+            <ScrollArea className="h-75">
               <FieldGroup className="gap-4">
                 <Field
                   orientation="responsive"

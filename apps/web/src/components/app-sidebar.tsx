@@ -187,7 +187,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem className="group-data-[collapsible=icon]:pl-1.5">
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  nativeButton={false}
                   render={
                     <SidebarMenuButton
                       size="lg"
@@ -255,7 +254,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Button
                 type="button"
                 variant="secondary"
-                nativeButton={false}
                 className="size-12 rounded-full bg-linear-to-b from-[#DEFFE0] to-[#EAFFEB] shadow-[inset_0px_-4px_5.7px_0px_#0D8A7240]"
               >
                 <HugeiconsIcon
@@ -270,7 +268,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Button
               type="button"
               variant="ghost"
-              nativeButton={false}
               onClick={() => setOpen(false)}
               className="col-start-2 row-span-2 row-start-1 size-12 self-center-safe justify-self-end rounded-full"
             >
@@ -297,7 +294,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Button
                   type="button"
                   variant="outline"
-                  nativeButton={false}
                   className="size-10 rounded-full border-none"
                 >
                   <HugeiconsIcon

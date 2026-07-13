@@ -67,7 +67,6 @@ export const Route = createFileRoute("/app/project/$id")({
     ],
   },
   validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ search }),
   component: RouteComponent,
   notFoundComponent: () => <div>404 Not found.</div>,
 });
