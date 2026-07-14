@@ -1,21 +1,8 @@
-export type ProjectStatus = "completed" | "in-progress" | "in-review";
+import type { AppRouter } from "@inqra/api/routers/index";
+import type { inferRouterOutputs } from "@trpc/server";
 
-export type ProjectMember = {
-  id: string;
-  displayName: string;
-  avatarUrl: string;
-  initials: string;
-};
+type RouterOutputs = inferRouterOutputs<AppRouter>;
 
-export type Project = {
-  id: string;
-  name: string;
-  teamName: string;
-  status: ProjectStatus;
-  startDate: string;
-  endDate: string;
-  taskCount: number;
-  isFavorite: boolean;
-  members: readonly ProjectMember[];
-  additionalMemberCount: number;
-};
+export type Project = RouterOutputs["project"]["byId"];
+export type ProjectMember = Project["members"][number];
+export type ProjectStatus = Project["status"];

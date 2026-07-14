@@ -1,17 +1,16 @@
 import {
   createFileRoute,
-  notFound,
   retainSearchParams,
   stripSearchParams,
   useNavigate,
 } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { z } from "zod/v4";
 
 import {
   ProjectDetailHeader,
   ProjectOverview,
 } from "@/modules/projects/components/project-detail-header";
-import { findMockProjectById } from "@/modules/projects/project.fixtures";
 import { ProjectTasksTable } from "@/modules/tasks/components/project-tasks-table";
 import type { TaskWorkspaceView } from "@/modules/tasks/task.types";
 
@@ -29,11 +28,10 @@ function RouteComponent() {
   const { id } = Route.useParams();
   const { view } = Route.useSearch();
   const navigate = useNavigate({ from: "/app/project/$id" });
-  const project = findMockProjectById(id);
-
-  if (!project) {
-    throw notFound();
-  }
+  const { trpc } = Route.useRouteContext();
+  const { data: project } = useSuspenseQuery(
+    trpc.project.byId.queryOptions({ projectId: id })
+  );
 
   const projectId = project.id;
 
@@ -60,6 +58,10 @@ function RouteComponent() {
 }
 
 export const Route = createFileRoute("/app/project/$id")({
+  loader: async ({ context, params }) =>
+    await context.queryClient.ensureQueryData(
+      context.trpc.project.byId.queryOptions({ projectId: params.id })
+    ),
   search: {
     middlewares: [
       retainSearchParams(["view"]),

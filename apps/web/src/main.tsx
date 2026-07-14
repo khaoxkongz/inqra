@@ -9,6 +9,7 @@ import { queryClient, trpc } from "./utils/trpc";
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  defaultPreloadStaleTime: 0,
   scrollRestoration: true,
   defaultPendingComponent: () => <Loader />,
   context: { trpc, queryClient },

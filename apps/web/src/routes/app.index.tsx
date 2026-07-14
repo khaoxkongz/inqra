@@ -17,6 +17,7 @@ import {
   Upload01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
@@ -51,7 +52,6 @@ import {
 } from "@inqra/ui/components/tooltip";
 
 import { ProjectStatusBadge } from "@/modules/projects/components/project-status-badge";
-import { mockProjects } from "@/modules/projects/project.fixtures";
 import type { Project } from "@/modules/projects/project.types";
 import {
   formatNumber,
@@ -103,11 +103,6 @@ const defaultSearchValues = {
   sort: "latest" as const,
   isFavorite: false,
 };
-
-const dashboardSummary = {
-  totalProjects: 250,
-  totalTasks: 9000,
-} as const;
 
 type SortingMethod = {
   id: string;
@@ -167,6 +162,14 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/app/")({
+  loaderDeps: ({ search }) => ({
+    favoriteOnly: search.isFavorite,
+    sort: search.sort,
+  }),
+  loader: async ({ context, deps }) =>
+    await context.queryClient.ensureQueryData(
+      context.trpc.project.list.queryOptions(deps)
+    ),
   search: {
     middlewares: [
       retainSearchParams(["view", "sort", "isFavorite"]),
@@ -198,39 +201,97 @@ function ProjectTitle({ name }: Pick<Project, "name">) {
   );
 }
 
-function ProjectActions({ isFavorite }: Pick<Project, "isFavorite">) {
+function ProjectActions({
+  favoriteLimit,
+  id,
+  isFavorite,
+}: Pick<Project, "id" | "isFavorite"> & { favoriteLimit: number }) {
+  const [open, setOpen] = React.useState(false);
+  const { queryClient, trpc } = Route.useRouteContext();
+  const favoriteMutation = useMutation(
+    trpc.project.favorite.set.mutationOptions({
+      onError: (error) => {
+        if (error.data?.code === "CONFLICT") {
+          setOpen(true);
+        }
+      },
+      onSuccess: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.project.list.queryFilter()),
+          queryClient.invalidateQueries(
+            trpc.project.byId.queryFilter({ projectId: id })
+          ),
+        ]);
+      },
+    })
+  );
+
+  const handleFavoriteClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    favoriteMutation.mutate({ projectId: id, isFavorite: !isFavorite });
+  };
+
   return (
-    <div className="relative z-20 flex items-center gap-px">
-      <Button
-        type="button"
-        size="icon-sm"
-        variant="ghost"
-        aria-label={isFavorite ? "นำออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
-      >
-        <HugeiconsIcon
-          icon={StarIcon}
-          className={isFavorite ? "text-amber-500" : undefined}
-        />
-      </Button>
-      <Button
-        type="button"
-        size="icon-sm"
-        variant="ghost"
-        className="text-primary"
-        aria-label="แก้ไขโปรเจกต์"
-      >
-        <HugeiconsIcon icon={Edit02Icon} />
-      </Button>
-      <Button
-        type="button"
-        size="icon-sm"
-        variant="ghost"
-        className="text-destructive"
-        aria-label="ลบโปรเจกต์"
-      >
-        <HugeiconsIcon icon={Delete02Icon} />
-      </Button>
-    </div>
+    <React.Fragment>
+      <div className="relative z-20 flex items-center gap-px">
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          aria-pressed={isFavorite}
+          aria-label={isFavorite ? "นำออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+          disabled={favoriteMutation.isPending}
+          onClick={handleFavoriteClick}
+        >
+          <HugeiconsIcon
+            icon={StarIcon}
+            className={isFavorite ? "text-amber-500" : undefined}
+          />
+        </Button>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          className="text-primary"
+          aria-label="แก้ไขโปรเจกต์"
+        >
+          <HugeiconsIcon icon={Edit02Icon} />
+        </Button>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          className="text-destructive"
+          aria-label="ลบโปรเจกต์"
+        >
+          <HugeiconsIcon icon={Delete02Icon} />
+        </Button>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="h-88 sm:max-w-md">
+          <figure className="flex flex-col items-center justify-center gap-4">
+            <picture>
+              <img
+                src="/warning-state.png"
+                alt="Warning favorite project limit."
+                className="size-25"
+              />
+            </picture>
+
+            <figcaption className="text-muted-foreground grid gap-2 truncate text-center text-sm">
+              <div className="text-destructive text-xl">
+                คุณเพิ่มโปรเจกต์ที่ชื่นชอบครบ {favoriteLimit} รายการแล้ว
+              </div>
+              <div>โปรดนำรายการเดิมออกก่อน เพื่อเพิ่มโปรเจกต์ใหม่</div>
+            </figcaption>
+          </figure>
+        </DialogContent>
+      </Dialog>
+    </React.Fragment>
   );
 }
 
@@ -253,12 +314,22 @@ function ProjectMembers({
   );
 }
 
-function ProjectGridCard({ project }: { project: Project }) {
+function ProjectGridCard({
+  favoriteLimit,
+  project,
+}: {
+  favoriteLimit: number;
+  project: Project;
+}) {
   return (
     <article className="relative isolate grid max-h-67 w-full min-w-0 auto-rows-max items-start gap-4 rounded-md border p-4 text-start">
       <div className="flex w-full items-center justify-between gap-px">
         <ProjectStatusBadge status={project.status} />
-        <ProjectActions isFavorite={project.isFavorite} />
+        <ProjectActions
+          favoriteLimit={favoriteLimit}
+          id={project.id}
+          isFavorite={project.isFavorite}
+        />
       </div>
 
       <ProjectTeamBadge teamName={project.teamName} />
@@ -296,23 +367,33 @@ function ProjectGridCard({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* <Link
+      <Link
         to="/app/project/$id"
         params={{ id: project.id }}
         className="absolute inset-0 cursor-pointer"
-      /> */}
+      />
     </article>
   );
 }
 
-function ProjectListCard({ project }: { project: Project }) {
+function ProjectListCard({
+  favoriteLimit,
+  project,
+}: {
+  favoriteLimit: number;
+  project: Project;
+}) {
   return (
     <article className="relative isolate grid auto-rows-auto gap-4 rounded-md border p-4">
       <div className="flex items-center justify-between gap-4">
         <ProjectTeamBadge teamName={project.teamName} />
         <div className="flex items-center gap-px">
           <ProjectStatusBadge status={project.status} />
-          <ProjectActions isFavorite={project.isFavorite} />
+          <ProjectActions
+            favoriteLimit={favoriteLimit}
+            id={project.id}
+            isFavorite={project.isFavorite}
+          />
         </div>
       </div>
 
@@ -371,10 +452,12 @@ function RouteComponent() {
 
   const navigate = useNavigate({ from: "/app/" });
   const { view, isFavorite } = Route.useSearch();
-
-  const visibleProjects = isFavorite
-    ? mockProjects.filter((project) => project.isFavorite)
-    : mockProjects;
+  const { trpc } = Route.useRouteContext();
+  const { sort } = Route.useSearch();
+  const { data: projectList } = useSuspenseQuery(
+    trpc.project.list.queryOptions({ favoriteOnly: isFavorite, sort })
+  );
+  const visibleProjects = projectList.items;
 
   return (
     <React.Fragment>
@@ -471,13 +554,13 @@ function RouteComponent() {
             <div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
               <div className="text-foreground flex items-center gap-2">
                 <div className="text-base font-medium">
-                  ทั้งหมด {formatNumber(dashboardSummary.totalProjects)} โปรเจกต์
+                  ทั้งหมด {formatNumber(projectList.totalProjects)} โปรเจกต์
                 </div>
                 <Separator
                   orientation="vertical"
                   className="data-vertical:h-4 data-vertical:self-center"
                 />
-                <div>{formatNumber(dashboardSummary.totalTasks)} Task</div>
+                <div>{formatNumber(projectList.totalTasks)} Task</div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -563,7 +646,11 @@ function RouteComponent() {
               className="grid auto-rows-max grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
             >
               {visibleProjects.map((project) => (
-                <ProjectGridCard key={project.id} project={project} />
+                <ProjectGridCard
+                  favoriteLimit={projectList.favoriteLimit}
+                  key={project.id}
+                  project={project}
+                />
               ))}
             </TabsContent>
             <TabsContent
@@ -571,7 +658,11 @@ function RouteComponent() {
               className="grid auto-rows-min grid-cols-1 gap-4"
             >
               {visibleProjects.map((project) => (
-                <ProjectListCard key={project.id} project={project} />
+                <ProjectListCard
+                  favoriteLimit={projectList.favoriteLimit}
+                  key={project.id}
+                  project={project}
+                />
               ))}
             </TabsContent>
           </React.Fragment>

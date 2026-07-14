@@ -1,4 +1,5 @@
 import { auth } from "@inqra/auth";
+import { db } from "@inqra/db";
 import type { Context as HonoContext } from "hono";
 
 export interface CreateContextOptions {
@@ -9,8 +10,10 @@ export async function createContext({ context }: CreateContextOptions) {
   const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
+
   return {
     auth: null,
+    db,
     session,
   };
 }

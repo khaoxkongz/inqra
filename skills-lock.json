@@ -10,7 +10,7 @@
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "a4c830509e85557b59339d8d93a4e243e9e59c686e7678854d39230e12c2a6dc"
+      "computedHash": "61ba0ef64ed2e7c424401cc848ca33dd6d790a720c44727717dc0c5cba5fc122"
     },
     "hono": {
       "source": "yusukebe/hono-skill",
@@ -117,7 +117,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "7fcd5ac3e11b30b86907ab9a81af6888954d9f14c72f3e09f5cc2afcbd50956d"
+      "computedHash": "89b09216da74e889842201a5bb689e23214500a87e3bae987c63ffad8f75595c"
     },
     "ultracite": {
       "source": "haydenbleasel/ultracite",
