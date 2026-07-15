@@ -1,16 +1,27 @@
 import { Toaster } from "@inqra/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   HeadContent,
+  Link,
   Outlet,
   createRootRouteWithContext,
+  useNavigate,
+  useParams,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, useTheme } from "@/components/theme-provider";
 import type { trpc } from "@/utils/trpc";
 
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { authClient } from "@/lib/auth-client";
+import { apiKeyPlugin } from "@/lib/auth/api-key-plugin";
+import { deleteUserPlugin } from "@/lib/auth/delete-user-plugin";
+import { magicLinkPlugin } from "@/lib/auth/magic-link-plugin";
+import { multiSessionPlugin } from "@/lib/auth/multi-session-plugin";
+import { organizationPlugin } from "@/lib/auth/organization-plugin";
+import { passkeyPlugin } from "@/lib/auth/passkey-plugin";
+import { themePlugin } from "@/lib/auth/theme-plugin";
+import { usernamePlugin } from "@/lib/auth/username-plugin";
 import "../index.css";
 
 export interface RouterAppContext {
@@ -40,6 +51,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
+  const navigate = useNavigate();
+  const params = useParams({ strict: false });
+
   return (
     <>
       <HeadContent />
@@ -48,12 +62,37 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="relative">
-          <div className="isolate flex min-h-svh flex-col antialiased">
-            <Outlet />
+        <AuthProvider
+          authClient={authClient}
+          redirectTo="/settings/account"
+          socialProviders={["google"]}
+          emailAndPassword={{ requireEmailVerification: false }}
+          navigate={navigate}
+          plugins={[
+            usernamePlugin({
+              usernamePrefix: "@",
+              localization: { usernamePlaceholder: "username" },
+            }),
+            magicLinkPlugin(),
+            passkeyPlugin(),
+            apiKeyPlugin({ organization: true }),
+            themePlugin({ useTheme }),
+            multiSessionPlugin(),
+            deleteUserPlugin(),
+            organizationPlugin({
+              slugPrefix: "@",
+              slug: params?.id ?? null,
+            }),
+          ]}
+          Link={({ href, ...props }) => <Link to={href} {...props} />}
+        >
+          <div className="relative">
+            <div className="isolate flex min-h-svh flex-col antialiased">
+              <Outlet />
+            </div>
           </div>
-        </div>
-        <Toaster richColors />
+          <Toaster richColors />
+        </AuthProvider>
       </ThemeProvider>
       {/* <TanStackRouterDevtools position="bottom-left"  /> */}
       {/* <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" /> */}

@@ -55,6 +55,7 @@ import {
 } from "@inqra/ui/components/dialog";
 import { Button } from "@inqra/ui/components/button";
 import { Badge } from "@inqra/ui/components/badge";
+import { Link } from "@tanstack/react-router";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, toggleSidebar } = useSidebar();
@@ -122,6 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     size="lg"
+                    render={() => <Link to="/app" />}
                     className="text-muted-foreground group-data-[collapsible=icon]:size-12! group-data-[collapsible=icon]:p-3.5! [&_svg]:size-5"
                     isActive
                   >

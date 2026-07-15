@@ -1,8 +1,10 @@
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { captcha, magicLink } from "better-auth/plugins";
+
 import { createDb } from "@inqra/db";
 import * as schema from "@inqra/db/schema/auth";
 import { env } from "@inqra/env/server";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 export function createAuth() {
   const db = createDb();
@@ -10,7 +12,6 @@ export function createAuth() {
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: "pg",
-
       schema,
     }),
     trustedOrigins: [env.CORS_ORIGIN],
@@ -26,7 +27,23 @@ export function createAuth() {
         httpOnly: true,
       },
     },
-    plugins: [],
+    socialProviders: {
+      google: {
+        clientId: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+      },
+    },
+    plugins: [
+      magicLink({
+        sendMagicLink: async () => {
+          // send email to user
+        },
+      }),
+      captcha({
+        provider: "cloudflare-turnstile",
+        secretKey: process.env.TURNSTILE_SECRET_KEY!,
+      }),
+    ],
   });
 }
 

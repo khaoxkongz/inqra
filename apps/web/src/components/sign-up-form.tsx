@@ -4,28 +4,24 @@ import { Label } from "@inqra/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignUpForm({
-  onSwitchToSignIn,
-}: {
-  onSwitchToSignIn: () => void;
-}) {
-  const navigate = useNavigate({
-    from: "/",
-  });
+const defaultValues = {
+  email: "",
+  password: "",
+  name: "",
+};
+
+const SignUpForm = ({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) => {
+  const navigate = useNavigate({ from: "/" });
   const { isPending } = authClient.useSession();
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-    },
+    defaultValues,
     onSubmit: async ({ value }) => {
       await authClient.signUp.email(
         {
@@ -149,6 +145,7 @@ export default function SignUpForm({
             <Button
               type="submit"
               className="w-full"
+              variant="primaryGradient"
               disabled={!canSubmit || isSubmitting}
             >
               {isSubmitting ? "Submitting..." : "Sign Up"}
@@ -168,4 +165,6 @@ export default function SignUpForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignUpForm;

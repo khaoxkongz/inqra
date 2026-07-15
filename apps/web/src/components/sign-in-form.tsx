@@ -1,30 +1,27 @@
-import { Button } from "@inqra/ui/components/button";
-import { Input } from "@inqra/ui/components/input";
-import { Label } from "@inqra/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
+
+import { Button } from "@inqra/ui/components/button";
+import { Input } from "@inqra/ui/components/input";
+import { Label } from "@inqra/ui/components/label";
 
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({
-  onSwitchToSignUp,
-}: {
-  onSwitchToSignUp: () => void;
-}) {
-  const navigate = useNavigate({
-    from: "/",
-  });
+const defaultValues = {
+  email: "",
+  password: "",
+};
+
+const SignInForm = ({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) => {
+  const navigate = useNavigate({ from: "/" });
   const { isPending } = authClient.useSession();
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues,
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
         {
@@ -124,6 +121,7 @@ export default function SignInForm({
             <Button
               type="submit"
               className="w-full"
+              variant="primaryGradient"
               disabled={!canSubmit || isSubmitting}
             >
               {isSubmitting ? "Submitting..." : "Sign In"}
@@ -131,6 +129,8 @@ export default function SignInForm({
           )}
         </form.Subscribe>
       </form>
+
+      <div className="relative">or</div>
 
       <div className="mt-4 text-center">
         <Button
@@ -143,4 +143,6 @@ export default function SignInForm({
       </div>
     </div>
   );
-}
+};
+
+export default SignInForm;
