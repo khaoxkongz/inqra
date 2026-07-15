@@ -1,9 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
-  createLazyFileRoute,
+  createFileRoute,
   getRouteApi,
+  retainSearchParams,
+  stripSearchParams,
   useNavigate,
 } from "@tanstack/react-router";
+import { z } from "zod/v4";
 
 import {
   ProjectDetailHeader,
@@ -12,12 +15,22 @@ import {
 import { ProjectTasksTable } from "@/modules/tasks/components/project-tasks-table";
 import type { TaskWorkspaceView } from "@/modules/tasks/task.types";
 
-const route = getRouteApi("/app/project/$id/");
+const defaultSearchValues = {
+  view: "list" as const,
+};
+
+const searchSchema = z.object({
+  view: z
+    .literal(["list", "board", "details"])
+    .default(defaultSearchValues.view),
+});
+
+const route = getRouteApi("/app/project/$id");
 
 function RouteComponent() {
   const { id } = route.useParams();
   const { view } = route.useSearch();
-  const navigate = useNavigate({ from: "/app/project/$id/" });
+  const navigate = useNavigate({ from: "/app/project/$id" });
   const { trpc } = route.useRouteContext();
   const { data: project } = useSuspenseQuery(
     trpc.project.byId.queryOptions({ projectId: id })
@@ -47,7 +60,18 @@ function RouteComponent() {
   );
 }
 
-export const Route = createLazyFileRoute("/app/project/$id")({
+export const Route = createFileRoute("/app/project/$id")({
+  loader: async ({ context, params }) =>
+    await context.queryClient.ensureQueryData(
+      context.trpc.project.byId.queryOptions({ projectId: params.id })
+    ),
+  search: {
+    middlewares: [
+      retainSearchParams(["view"]),
+      stripSearchParams(defaultSearchValues),
+    ],
+  },
+  validateSearch: searchSchema,
   component: RouteComponent,
   notFoundComponent: () => <div>404 Not found.</div>,
   pendingComponent: () => <div>Loading...</div>,
